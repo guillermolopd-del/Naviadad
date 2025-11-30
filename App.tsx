@@ -9,7 +9,15 @@ const App: React.FC = () => {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [stage, setStage] = useState<AppStage>(AppStage.WELCOME); // Default to Welcome screen
-  const [revealTime] = useState(getTodayMidnight());
+  
+  // DEMO MODE: To allow immediate testing of the Dashboard, we set the "Reveal Time" 
+  // to a time in the past. This ensures checkTimeStage() always goes to DASHBOARD.
+  // In a real scenario, this would be `getTodayMidnight()` (23:59 tonight).
+  const [revealTime] = useState(() => {
+    const past = new Date();
+    past.setHours(past.getHours() - 1); 
+    return past;
+  });
 
   // Logic to determine which screen to show based on time
   const checkTimeStage = () => {

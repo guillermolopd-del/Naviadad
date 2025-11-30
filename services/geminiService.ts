@@ -1,23 +1,27 @@
 import { GoogleGenAI } from "@google/genai";
 
-let ai: GoogleGenAI | null = null;
-
-try {
-  // Safely attempt to access the API key. 
-  // In some client-side environments, accessing 'process' directly might throw if not polyfilled.
-  const apiKey = typeof process !== 'undefined' ? process.env.API_KEY : undefined;
-  
-  if (apiKey) {
-    ai = new GoogleGenAI({ apiKey });
+// Helper to safely get API key without crashing in environments where process is undefined
+const getApiKey = (): string | undefined => {
+  try {
+    if (typeof process !== 'undefined' && process.env) {
+      return process.env.API_KEY;
+    }
+  } catch (e) {
+    console.warn("Error accessing process.env:", e);
   }
-} catch (error) {
-  console.warn("Gemini API Client could not be initialized (Environment check).");
-}
+  return undefined;
+};
 
 export const getGiftSuggestion = async (interest: string): Promise<string> => {
-  if (!ai) return "La conexión con los duendes (IA) no está disponible en este momento.";
+  const apiKey = getApiKey();
+  
+  if (!apiKey) {
+    return "La conexión con los duendes (IA) no está disponible en este momento (Falta API Key).";
+  }
 
   try {
+    // Initialize AI client lazily to avoid top-level crashes
+    const ai = new GoogleGenAI({ apiKey });
     const model = 'gemini-2.5-flash';
     const prompt = `Give me 3 creative and distinct Christmas gift ideas for someone who likes "${interest}". Keep it short, bullet points, in Spanish.`;
     
