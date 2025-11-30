@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Snowflakes from './components/Snowflakes';
 import Countdown from './components/Countdown';
 import Dashboard from './components/Dashboard';
@@ -8,23 +8,20 @@ import { AppStage } from './types';
 const App: React.FC = () => {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
-  const [stage, setStage] = useState<AppStage>(AppStage.WELCOME); // Default to Welcome screen
+  const [stage, setStage] = useState<AppStage>(AppStage.WELCOME);
   
-  // DEMO MODE: To allow immediate testing of the Dashboard, we set the "Reveal Time" 
-  // to a time in the past. This ensures checkTimeStage() always goes to DASHBOARD.
-  // In a real scenario, this would be `getTodayMidnight()` (23:59 tonight).
-  const [revealTime] = useState(() => {
-    const past = new Date();
-    past.setHours(past.getHours() - 1); 
-    return past;
-  });
+  // PRODUCTION MODE: 
+  // Target is tonight at 23:59:59.
+  const [revealTime] = useState<Date>(getTodayMidnight());
 
   // Logic to determine which screen to show based on time
   const checkTimeStage = () => {
     const now = new Date();
+    // If we are past the reveal time, show dashboard
     if (now >= revealTime) {
       setStage(AppStage.DASHBOARD);
     } else {
+      // Otherwise wait
       setStage(AppStage.PRE_REVEAL_COUNTDOWN);
     }
   };
@@ -191,14 +188,6 @@ const App: React.FC = () => {
               title="Cuenta atrás para el Sorteo" 
               onComplete={handleRevealComplete}
             />
-
-             {/* Dev Helper: In a real app remove this. For reviewers, this lets them skip the wait */}
-             <button 
-              onClick={handleRevealComplete}
-              className="mt-20 text-xs text-white/20 hover:text-white/50 underline"
-            >
-              (Dev: Saltar espera)
-            </button>
           </div>
         )}
 

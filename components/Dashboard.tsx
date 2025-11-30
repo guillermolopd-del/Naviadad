@@ -11,8 +11,12 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
   // Simulated Target (In a real app, this comes from backend)
   // For demo, we hash the email to pick a static name so it's consistent for the user
-  const possibleTargets = ["María", "Juan", "Lucía", "Carlos", "Sofía", "Diego"];
-  const targetIndex = userEmail.length % possibleTargets.length;
+  const possibleTargets = [
+    "María", "Juan", "Lucía", "Carlos", "Sofía", "Diego", 
+    "Elena", "Pablo", "Carmen", "Javier", "Ana", "Miguel",
+    "Laura", "Daniel", "Paula", "Alejandro", "Marta", "David"
+  ];
+  const targetIndex = userEmail.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % possibleTargets.length;
   const targetName = possibleTargets[targetIndex];
 
   const [activeTab, setActiveTab] = useState<'none' | 'rules' | 'wishes' | 'dinner'>('none');
@@ -221,7 +225,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
                         {isLoadingAi ? <i className="fas fa-spinner fa-spin"></i> : 'Consultar'}
                       </button>
                     </div>
-                    {!hasApiKey && <p className="text-xs text-red-500">API Key no configurada en el entorno.</p>}
+                    {!hasApiKey && <p className="text-xs text-red-500">Nota: La IA requiere configuración de API Key.</p>}
                     {aiResponse && (
                       <div className="mt-2 bg-white p-3 rounded border border-blue-100 text-sm whitespace-pre-wrap">
                         {aiResponse}

@@ -1,5 +1,5 @@
 {
-  "name": "Copy of Navidad Secreta",
-  "description": "Una aplicación festiva de Amigo Invisible con cuentas regresivas, listas de deseos y sugerencias para la cena, todo con un diseño navideño y acogedor.",
+  "name": "Navidad Secreta",
+  "description": "Aplicación web festiva para gestionar el Amigo Invisible de forma sencilla y mágica. Incluye sorteo simulado, lista de deseos, menú de cena y sugerencias de IA.",
   "requestFramePermissions": []
 }
