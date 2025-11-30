@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Snowflakes from './components/Snowflakes';
 import Countdown from './components/Countdown';
@@ -12,7 +11,18 @@ const App: React.FC = () => {
   const [stage, setStage] = useState<AppStage>(AppStage.REGISTRATION);
   const [revealTime] = useState(getTodayMidnight());
 
-  // Check initial time on load to see if we should skip countdown
+  // Logic to determine which screen to show
+  const checkTimeStage = () => {
+    const now = new Date();
+    // Logic: If it is past midnight today, show dashboard. Else show pre-reveal.
+    if (now >= revealTime) {
+      setStage(AppStage.DASHBOARD);
+    } else {
+      setStage(AppStage.PRE_REVEAL_COUNTDOWN);
+    }
+  };
+
+  // Check initial state on load
   useEffect(() => {
     const savedEmail = localStorage.getItem('ns_user_email');
     const savedName = localStorage.getItem('ns_user_name');
@@ -27,16 +37,6 @@ const App: React.FC = () => {
       }
     }
   }, []);
-
-  const checkTimeStage = () => {
-    const now = new Date();
-    // Logic: If it is past midnight today, show dashboard. Else show pre-reveal.
-    if (now >= revealTime) {
-      setStage(AppStage.DASHBOARD);
-    } else {
-      setStage(AppStage.PRE_REVEAL_COUNTDOWN);
-    }
-  };
 
   const handleRegisterEmail = (e: React.FormEvent) => {
     e.preventDefault();

@@ -25,6 +25,16 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiResponse, setAiResponse] = useState('');
   const [isLoadingAi, setIsLoadingAi] = useState(false);
+  const [hasApiKey, setHasApiKey] = useState(false);
+
+  // Check for API key safely on mount
+  useEffect(() => {
+    try {
+      setHasApiKey(!!(typeof process !== 'undefined' && process.env && process.env.API_KEY));
+    } catch {
+      setHasApiKey(false);
+    }
+  }, []);
 
   // Load from local storage
   useEffect(() => {
@@ -205,13 +215,13 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
                       />
                       <button 
                         onClick={handleAskAI} 
-                        disabled={isLoadingAi || !process.env.API_KEY}
+                        disabled={isLoadingAi || !hasApiKey}
                         className="bg-blue-600 text-white px-4 rounded hover:bg-blue-700 disabled:bg-gray-400"
                       >
                         {isLoadingAi ? <i className="fas fa-spinner fa-spin"></i> : 'Consultar'}
                       </button>
                     </div>
-                    {!process.env.API_KEY && <p className="text-xs text-red-500">API Key no configurada en el entorno.</p>}
+                    {!hasApiKey && <p className="text-xs text-red-500">API Key no configurada en el entorno.</p>}
                     {aiResponse && (
                       <div className="mt-2 bg-white p-3 rounded border border-blue-100 text-sm whitespace-pre-wrap">
                         {aiResponse}

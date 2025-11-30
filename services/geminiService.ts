@@ -1,10 +1,21 @@
 import { GoogleGenAI } from "@google/genai";
 
-const apiKey = process.env.API_KEY || '';
-const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+let ai: GoogleGenAI | null = null;
+
+try {
+  // Safely attempt to access the API key. 
+  // In some client-side environments, accessing 'process' directly might throw if not polyfilled.
+  const apiKey = typeof process !== 'undefined' ? process.env.API_KEY : undefined;
+  
+  if (apiKey) {
+    ai = new GoogleGenAI({ apiKey });
+  }
+} catch (error) {
+  console.warn("Gemini API Client could not be initialized (Environment check).");
+}
 
 export const getGiftSuggestion = async (interest: string): Promise<string> => {
-  if (!ai) return "Por favor configura la API Key para usar la IA.";
+  if (!ai) return "La conexión con los duendes (IA) no está disponible en este momento.";
 
   try {
     const model = 'gemini-2.5-flash';
