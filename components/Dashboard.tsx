@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Participant, GiftIdea, DinnerSuggestion } from '../types';
 import Countdown from './Countdown';
 import { getEventDate } from '../utils/timeUtils';
-import { getGiftSuggestion } from '../services/geminiService';
 
 interface DashboardProps {
   userEmail: string;
@@ -27,21 +26,6 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
   const [newSuggestion, setNewSuggestion] = useState('');
   const [isRevealed, setIsRevealed] = useState(false);
   
-  // AI State
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [aiResponse, setAiResponse] = useState('');
-  const [isLoadingAi, setIsLoadingAi] = useState(false);
-  const [hasApiKey, setHasApiKey] = useState(false);
-
-  // Check for API key safely on mount
-  useEffect(() => {
-    try {
-      setHasApiKey(!!(typeof process !== 'undefined' && process.env && process.env.API_KEY));
-    } catch {
-      setHasApiKey(false);
-    }
-  }, []);
-
   // Load from local storage
   useEffect(() => {
     const savedWishes = localStorage.getItem('ns_wishes');
@@ -83,18 +67,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
     setNewSuggestion('');
   };
 
-  const handleAskAI = async () => {
-    if(!aiPrompt) return;
-    setIsLoadingAi(true);
-    setAiResponse('');
-    const ideas = await getGiftSuggestion(aiPrompt);
-    setAiResponse(ideas);
-    setIsLoadingAi(false);
-  }
-
-  // Filter wishes: You see wishes of the person you have to gift (simulated by checking if NOT your own for demo purposes, 
-  // or normally we would filter by targetEmail. Since we don't have a real DB of emails, we will show "Public Wishes" 
-  // excluding our own to simulate the experience).
+  // Filter wishes: You see wishes of the person you have to gift (simulated by checking if NOT your own for demo purposes)
   const visibleWishes = wishes.filter(w => w.forEmail !== userEmail);
   const myWishes = wishes.filter(w => w.forEmail === userEmail);
 
@@ -220,33 +193,6 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
                       ))}
                       {visibleWishes.length === 0 && <li className="text-gray-400 italic">Nadie ha puesto deseos todavía.</li>}
                     </ul>
-                  </div>
-
-                  {/* Gemini AI Integration */}
-                   <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mt-4">
-                    <h3 className="font-bold text-blue-800 mb-2">🤖 ¿Sin ideas? Pregúntale a Santa Chatty (IA)</h3>
-                    <div className="flex gap-2 mb-2">
-                       <input 
-                        type="text" 
-                        value={aiPrompt}
-                        onChange={(e) => setAiPrompt(e.target.value)}
-                        placeholder="Ej: Le gusta el padel, ¿Verdad Noe?"
-                        className="flex-1 p-2 border border-gray-300 rounded focus:border-blue-500 outline-none"
-                      />
-                      <button 
-                        onClick={handleAskAI} 
-                        disabled={isLoadingAi || !hasApiKey}
-                        className="bg-blue-600 text-white px-4 rounded hover:bg-blue-700 disabled:bg-gray-400"
-                      >
-                        {isLoadingAi ? <i className="fas fa-spinner fa-spin"></i> : 'Consultar'}
-                      </button>
-                    </div>
-                    {!hasApiKey && <p className="text-xs text-red-500">Nota: La IA requiere configuración de API Key.</p>}
-                    {aiResponse && (
-                      <div className="mt-2 bg-white p-3 rounded border border-blue-100 text-sm whitespace-pre-wrap">
-                        {aiResponse}
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
