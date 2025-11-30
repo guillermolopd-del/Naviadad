@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Participant, GiftIdea, DinnerSuggestion } from '../types';
 import Countdown from './Countdown';
@@ -24,6 +25,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
   const [newWish, setNewWish] = useState('');
   const [suggestions, setSuggestions] = useState<DinnerSuggestion[]>([]);
   const [newSuggestion, setNewSuggestion] = useState('');
+  const [isRevealed, setIsRevealed] = useState(false);
   
   // AI State
   const [aiPrompt, setAiPrompt] = useState('');
@@ -101,11 +103,25 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
       
       {/* Target Reveal Card */}
       <div className="w-full max-w-md bg-white/10 backdrop-blur-md rounded-2xl p-8 mb-12 border-2 border-yellow-500/50 text-center shadow-[0_0_30px_rgba(234,179,8,0.3)] animate-fade-in-up">
-        <h3 className="text-xl text-yellow-200 uppercase tracking-widest mb-2">Tu Amigo Invisible es</h3>
-        <div className="text-5xl festive-font text-white drop-shadow-lg mb-4 transform hover:scale-105 transition-transform duration-300">
-          {targetName}
+        <h3 className="text-xl text-yellow-200 uppercase tracking-widest mb-4">Tu Amigo Invisible es</h3>
+        
+        <div 
+          onClick={() => setIsRevealed(true)}
+          className="relative cursor-pointer group"
+        >
+           {/* The revealed Name */}
+          <div className={`text-5xl festive-font text-white drop-shadow-lg transition-all duration-700 transform ${isRevealed ? 'opacity-100 scale-100' : 'opacity-0 scale-50 absolute inset-0'}`}>
+            {targetName}
+          </div>
+
+          {/* The Hidden Overlay (Gift Box) */}
+          <div className={`transition-all duration-700 transform flex flex-col items-center justify-center ${isRevealed ? 'opacity-0 scale-150 pointer-events-none absolute inset-0' : 'opacity-100 scale-100'}`}>
+             <div className="text-6xl animate-bounce mb-2">🎁</div>
+             <p className="text-sm font-bold text-yellow-400 bg-red-900/80 px-4 py-1 rounded-full uppercase tracking-wider animate-pulse">Toca para abrir</p>
+          </div>
         </div>
-        <p className="text-sm text-gray-200 italic">¡Shhh! Es un secreto.</p>
+        
+        <p className={`text-sm text-gray-200 italic mt-4 transition-opacity duration-500 ${isRevealed ? 'opacity-100' : 'opacity-0'}`}>¡Shhh! Es un secreto.</p>
       </div>
 
       {/* Main Event Countdown */}

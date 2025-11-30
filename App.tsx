@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import Snowflakes from './components/Snowflakes';
-import Countdown from './components/Countdown';
 import Dashboard from './components/Dashboard';
-import { getTodayMidnight } from './utils/timeUtils';
 import { AppStage } from './types';
 
 const App: React.FC = () => {
@@ -10,22 +9,6 @@ const App: React.FC = () => {
   const [name, setName] = useState('');
   const [stage, setStage] = useState<AppStage>(AppStage.WELCOME);
   
-  // PRODUCTION MODE: 
-  // Target is tonight at 23:59:59.
-  const [revealTime] = useState<Date>(getTodayMidnight());
-
-  // Logic to determine which screen to show based on time
-  const checkTimeStage = () => {
-    const now = new Date();
-    // If we are past the reveal time, show dashboard
-    if (now >= revealTime) {
-      setStage(AppStage.DASHBOARD);
-    } else {
-      // Otherwise wait
-      setStage(AppStage.PRE_REVEAL_COUNTDOWN);
-    }
-  };
-
   // Logic to handle entering the app (checking local storage or starting fresh)
   const handleEnterApp = () => {
     const savedEmail = localStorage.getItem('ns_user_email');
@@ -35,7 +18,7 @@ const App: React.FC = () => {
       setEmail(savedEmail);
       if (savedName) {
         setName(savedName);
-        checkTimeStage();
+        setStage(AppStage.DASHBOARD);
       } else {
         setStage(AppStage.NAME_INPUT);
       }
@@ -56,12 +39,8 @@ const App: React.FC = () => {
     e.preventDefault();
     if (name.trim()) {
       localStorage.setItem('ns_user_name', name);
-      checkTimeStage();
+      setStage(AppStage.DASHBOARD);
     }
-  };
-
-  const handleRevealComplete = () => {
-    setStage(AppStage.DASHBOARD);
   };
 
   return (
@@ -170,24 +149,6 @@ const App: React.FC = () => {
                    style={{backgroundImage: 'repeating-linear-gradient(transparent, transparent 31px, #999 31px, #999 32px)'}}>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* STAGE 2: WAITING FOR REVEAL */}
-        {stage === AppStage.PRE_REVEAL_COUNTDOWN && (
-          <div className="w-full animate-fade-in">
-            <div className="text-center mb-12">
-              <p className="text-xl md:text-2xl text-yellow-100 max-w-2xl mx-auto leading-relaxed">
-                ¡Carta recibida, <span className="text-yellow-400 font-bold">{name}</span>! <br/>
-                El duende Juan Diego está emparejando a los participantes. El resultado se revelará al final del día. Gracias por la paciencia.
-              </p>
-            </div>
-            
-            <Countdown 
-              targetDate={revealTime} 
-              title="Cuenta atrás para el Sorteo" 
-              onComplete={handleRevealComplete}
-            />
           </div>
         )}
 
