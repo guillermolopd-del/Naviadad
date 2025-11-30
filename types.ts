@@ -19,6 +19,7 @@ export interface Participant {
 }
 
 export enum AppStage {
+  WELCOME = 'WELCOME',
   REGISTRATION = 'REGISTRATION',
   NAME_INPUT = 'NAME_INPUT',
   PRE_REVEAL_COUNTDOWN = 'PRE_REVEAL_COUNTDOWN',

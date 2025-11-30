@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Snowflakes from './components/Snowflakes';
 import Countdown from './components/Countdown';
 import Dashboard from './components/Dashboard';
@@ -8,13 +8,12 @@ import { AppStage } from './types';
 const App: React.FC = () => {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
-  const [stage, setStage] = useState<AppStage>(AppStage.REGISTRATION);
+  const [stage, setStage] = useState<AppStage>(AppStage.WELCOME); // Default to Welcome screen
   const [revealTime] = useState(getTodayMidnight());
 
-  // Logic to determine which screen to show
+  // Logic to determine which screen to show based on time
   const checkTimeStage = () => {
     const now = new Date();
-    // Logic: If it is past midnight today, show dashboard. Else show pre-reveal.
     if (now >= revealTime) {
       setStage(AppStage.DASHBOARD);
     } else {
@@ -22,8 +21,8 @@ const App: React.FC = () => {
     }
   };
 
-  // Check initial state on load
-  useEffect(() => {
+  // Logic to handle entering the app (checking local storage or starting fresh)
+  const handleEnterApp = () => {
     const savedEmail = localStorage.getItem('ns_user_email');
     const savedName = localStorage.getItem('ns_user_name');
 
@@ -35,8 +34,10 @@ const App: React.FC = () => {
       } else {
         setStage(AppStage.NAME_INPUT);
       }
+    } else {
+      setStage(AppStage.REGISTRATION);
     }
-  }, []);
+  };
 
   const handleRegisterEmail = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,12 +66,34 @@ const App: React.FC = () => {
       <main className="relative z-10 container mx-auto px-4 min-h-screen flex flex-col items-center justify-center py-10">
         
         {/* Header Logo/Title - Only show small header on Dashboard to save space */}
-        <header className={`text-center animate-fade-in-down ${stage === AppStage.DASHBOARD ? 'mb-4' : 'mb-8'}`}>
-          <div className={`${stage === AppStage.DASHBOARD ? 'text-4xl' : 'text-6xl'} mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]`}>🎅</div>
-          <h1 className={`${stage === AppStage.DASHBOARD ? 'text-3xl md:text-5xl' : 'text-5xl md:text-7xl'} festive-font text-white drop-shadow-lg tracking-wider`}>
-            Amigo <span className="text-yellow-400">Invisible</span>
-          </h1>
-        </header>
+        {stage !== AppStage.WELCOME && (
+          <header className={`text-center animate-fade-in-down ${stage === AppStage.DASHBOARD ? 'mb-4' : 'mb-8'}`}>
+            <div className={`${stage === AppStage.DASHBOARD ? 'text-4xl' : 'text-6xl'} mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]`}>🎅</div>
+            <h1 className={`${stage === AppStage.DASHBOARD ? 'text-3xl md:text-5xl' : 'text-5xl md:text-7xl'} festive-font text-white drop-shadow-lg tracking-wider`}>
+              Amigo <span className="text-yellow-400">Invisible</span>
+            </h1>
+          </header>
+        )}
+
+        {/* STAGE 0: WELCOME SCREEN */}
+        {stage === AppStage.WELCOME && (
+          <div className="text-center animate-fade-in flex flex-col items-center justify-center h-full">
+             <div className="text-8xl mb-6 animate-bounce drop-shadow-[0_0_25px_rgba(255,215,0,0.6)]">🎄</div>
+             <h1 className="text-6xl md:text-8xl festive-font text-white mb-8 drop-shadow-xl leading-tight">
+               Feliz<br/> <span className="text-yellow-400">Navidad</span>
+             </h1>
+             <p className="text-xl text-yellow-100 max-w-md mx-auto mb-12 italic">
+               "La magia de regalar comienza aquí..."
+             </p>
+             <button 
+               onClick={handleEnterApp}
+               className="group relative px-10 py-5 bg-red-700 text-white font-bold text-2xl rounded-full shadow-[0_0_20px_rgba(220,38,38,0.6)] hover:bg-red-600 hover:shadow-[0_0_30px_rgba(220,38,38,0.8)] transition-all transform hover:-translate-y-1 overflow-hidden"
+             >
+               <span className="relative z-10">Entrar</span>
+               <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out"></div>
+             </button>
+          </div>
+        )}
 
         {/* STAGE 1: REGISTRATION (EMAIL) */}
         {stage === AppStage.REGISTRATION && (
