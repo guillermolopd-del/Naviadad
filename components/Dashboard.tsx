@@ -58,8 +58,19 @@ const adventImages: Record<number, string> = {
 const secretSantaAssignments: Record<string, string> = {
   // "correo_participante@gmail.com": "NOMBRE DE QUIEN LE TOCA REGALAR",
   
-  "ejemplo@gmail.com": "Marta",
-  "prueba@hotmail.com": "Carlos",
+  "g.izdeca@gmail.com": "Miriam",
+"sara.cervifon@gmail.com": "Nacho",
+"m.mtena05@gmail.com": "Izquierdo",
+"annabanro@gmail.com": "Josete",
+"paloma.serranohe@gmail.com": "Sara",
+"santibueno1903@gmail.com": "López",
+"josean2408@hotmail.com": "Noelia",
+"myriamra02@gmail.com": "Anita",
+"miriamsierreamartinez@gmail.com": "Santi",
+"nachojaac@gmail.com": "Paloma",
+"guillermo.lopd@gmail.com": "Marta",
+"malapersiana2018@gmail.com": "Myri",
+
   
   // ¡AÑADE AQUÍ TUS PAREJAS! 👇
   // "juan@gmail.com": "Lucía",
