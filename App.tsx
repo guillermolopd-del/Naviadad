@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Snowflakes from './components/Snowflakes';
 import Dashboard from './components/Dashboard';
@@ -186,7 +185,7 @@ const App: React.FC = () => {
       {/* Work in Progress Footer Message */}
       <div className="fixed bottom-1 w-full text-center z-50 pointer-events-none">
         <p className="text-[10px] text-white/40 font-mono tracking-wide">
-          ⚠️ El duende Juandi está trabajando en mejorar la web. Gracias por su paciencia. 🔨
+          ⚠️ El duende Juandi está trabajando en mejorar la web. (v2.0 Online) 🔨
         </p>
       </div>
     </div>

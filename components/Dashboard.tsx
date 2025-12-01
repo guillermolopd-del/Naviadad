@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { Participant, GiftIdea, DinnerSuggestion } from '../types';
+import { GiftIdea, DinnerSuggestion } from '../types';
 import Countdown from './Countdown';
 import { getEventDate } from '../utils/timeUtils';
 import { secretSantaAssignments } from '../config';
+import { db } from '../firebaseConfig';
+import { ref, onValue, push, remove } from 'firebase/database';
 
 interface DashboardProps {
   userEmail: string;
@@ -12,10 +14,6 @@ interface DashboardProps {
 // ==============================================================================
 // 🎄 CONFIGURACIÓN DEL CALENDARIO DE ADVIENTO 🎄
 // ==============================================================================
-// INSTRUCCIONES PARA FOTOS:
-// Pon el enlace directo a la imagen (.jpg, .png).
-// ==============================================================================
-
 const adventImages: Record<number, string> = {
   // --- SEMANA 1 ---
   1:  "https://i.imgur.com/JrBjM1D.jpeg", // ✅ Fíjate que termina en .jpg (Foto real)
@@ -51,11 +49,7 @@ const adventImages: Record<number, string> = {
 
 const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
   // Logic to determine Target Name
-  // 1. Check if email is in the manual configuration list (imported from config.ts)
   const normalizedEmail = userEmail.toLowerCase().trim();
-  
-  // Como ya hemos validado en App.tsx, esto debería existir siempre.
-  // Si algo falla, ponemos un mensaje genérico, pero YA NO inventamos nombres.
   let targetName = secretSantaAssignments[normalizedEmail] || "Error: Participante no encontrado";
 
   const [activeTab, setActiveTab] = useState<'none' | 'rules' | 'wishes' | 'dinner' | 'advent'>('none');
@@ -64,62 +58,110 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
   const [suggestions, setSuggestions] = useState<DinnerSuggestion[]>([]);
   const [newSuggestion, setNewSuggestion] = useState('');
   const [isRevealed, setIsRevealed] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Advent Calendar State
   const [viewingDay, setViewingDay] = useState<number | null>(null);
 
-  // Load from local storage
+  // --- FIREBASE SYNC ---
+  // Cargar Deseos y Cenas en tiempo real
   useEffect(() => {
-    const savedWishes = localStorage.getItem('ns_wishes');
-    if (savedWishes) setWishes(JSON.parse(savedWishes));
+    // Escuchar cambios en "wishes"
+    const wishesRef = ref(db, 'wishes');
+    const unsubscribeWishes = onValue(wishesRef, (snapshot) => {
+      const data = snapshot.val();
+      const wishesList: GiftIdea[] = [];
+      if (data) {
+        Object.keys(data).forEach((key) => {
+          wishesList.push({
+            ...data[key],
+            id: key // Usamos la key de firebase como ID
+          });
+        });
+      }
+      setWishes(wishesList);
+    });
 
-    const savedSuggestions = localStorage.getItem('ns_suggestions');
-    if (savedSuggestions) setSuggestions(JSON.parse(savedSuggestions));
+    // Escuchar cambios en "suggestions" (Cena)
+    const suggestionsRef = ref(db, 'dinner_suggestions');
+    const unsubscribeSuggestions = onValue(suggestionsRef, (snapshot) => {
+      const data = snapshot.val();
+      const suggestionsList: DinnerSuggestion[] = [];
+      if (data) {
+        Object.keys(data).forEach((key) => {
+          suggestionsList.push({
+            ...data[key],
+            id: key
+          });
+        });
+      }
+      setSuggestions(suggestionsList);
+    });
+
+    return () => {
+      unsubscribeWishes();
+      unsubscribeSuggestions();
+    };
   }, []);
-
-  const saveWishes = (newWishes: GiftIdea[]) => {
-    setWishes(newWishes);
-    localStorage.setItem('ns_wishes', JSON.stringify(newWishes));
-  };
-
-  const saveSuggestions = (newSuggestions: DinnerSuggestion[]) => {
-    setSuggestions(newSuggestions);
-    localStorage.setItem('ns_suggestions', JSON.stringify(newSuggestions));
-  };
 
   const addWish = () => {
     if (!newWish.trim()) return;
-    const wish: GiftIdea = {
-      id: Date.now().toString(),
+    setIsSaving(true);
+    const wishesRef = ref(db, 'wishes');
+    const newWishObj = {
       item: newWish,
       forEmail: userEmail,
+      timestamp: Date.now()
     };
-    saveWishes([...wishes, wish]);
-    setNewWish('');
+    push(wishesRef, newWishObj)
+      .then(() => {
+        setNewWish('');
+        setIsSaving(false);
+      })
+      .catch((error) => {
+        setIsSaving(false);
+        alert("❌ Error al guardar: " + error.message + "\n\n⚠️ IMPORTANTE: Asegúrate de haber puesto las Reglas de Firebase en '.write': true");
+      });
+  };
+
+  const deleteWish = (wishId: string) => {
+    // Solo permitir borrar si es tuyo (validación simple en frontend)
+    const wishToDelete = wishes.find(w => w.id === wishId);
+    if (wishToDelete && wishToDelete.forEmail === userEmail) {
+      const wishRef = ref(db, `wishes/${wishId}`);
+      remove(wishRef).catch(error => alert("Error al borrar: " + error.message));
+    }
   };
 
   const addSuggestion = () => {
     if (!newSuggestion.trim()) return;
-    const suggestion: DinnerSuggestion = {
-      id: Date.now().toString(),
+    setIsSaving(true);
+    const suggestionsRef = ref(db, 'dinner_suggestions');
+    const newSuggestionObj = {
       dish: newSuggestion,
-      author: userEmail.split('@')[0],
+      author: localStorage.getItem('ns_user_name') || userEmail.split('@')[0],
+      timestamp: Date.now()
     };
-    saveSuggestions([...suggestions, suggestion]);
-    setNewSuggestion('');
+    push(suggestionsRef, newSuggestionObj)
+      .then(() => {
+        setNewSuggestion('');
+        setIsSaving(false);
+      })
+      .catch((error) => {
+        setIsSaving(false);
+        alert("❌ Error al guardar: " + error.message + "\n\n⚠️ IMPORTANTE: Asegúrate de haber puesto las Reglas de Firebase en '.write': true");
+      });
   };
 
   // --- ADVENT LOGIC ---
   const isDayUnlocked = (day: number) => {
     const now = new Date();
-    // If it's not December yet (month 11), everything is locked (unless year is > current)
-    if (now.getMonth() < 11 && now.getFullYear() <= new Date().getFullYear()) return false;
-    // If it is December, check day
-    if (now.getMonth() === 11) {
+    // Permitir ver si ya pasó la fecha (lógica simple para año actual)
+    if (now.getMonth() === 11) { // Diciembre es 11
         return now.getDate() >= day;
     }
-    // If past December (next year), unlocked
-    return true;
+    // Si no es diciembre, bloqueado (o desbloqueado si es año siguiente, lógica simple)
+    return now.getMonth() < 11 ? false : true;
   };
 
   const handleDayClick = (day: number) => {
@@ -130,7 +172,6 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
     }
   };
 
-  // Filter wishes: You see wishes of the person you have to gift (simulated by checking if NOT your own for demo purposes)
   const visibleWishes = wishes.filter(w => w.forEmail !== userEmail);
   const myWishes = wishes.filter(w => w.forEmail === userEmail);
 
@@ -145,12 +186,10 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
           onClick={() => setIsRevealed(true)}
           className="relative cursor-pointer group"
         >
-           {/* The revealed Name */}
           <div className={`text-5xl festive-font text-white drop-shadow-lg transition-all duration-700 transform ${isRevealed ? 'opacity-100 scale-100' : 'opacity-0 scale-50 absolute inset-0'}`}>
             {targetName}
           </div>
 
-          {/* The Hidden Overlay (Gift Box) */}
           <div className={`transition-all duration-700 transform flex flex-col items-center justify-center ${isRevealed ? 'opacity-0 scale-150 pointer-events-none absolute inset-0' : 'opacity-100 scale-100'}`}>
              <div className="text-6xl animate-bounce mb-2">🎁</div>
              <p className="text-sm font-bold text-yellow-400 bg-red-900/80 px-4 py-1 rounded-full uppercase tracking-wider animate-pulse">Toca para abrir</p>
@@ -209,8 +248,8 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
             <div className={`p-4 flex justify-between items-center text-white ${activeTab === 'advent' ? 'bg-blue-700' : 'bg-red-700'}`}>
               <h2 className="text-2xl festive-font font-bold">
                 {activeTab === 'rules' && 'Reglas del Juego'}
-                {activeTab === 'wishes' && 'Lista de Deseos'}
-                {activeTab === 'dinner' && 'Menú de Navidad'}
+                {activeTab === 'wishes' && 'Lista de Deseos (Online)'}
+                {activeTab === 'dinner' && 'Menú de Navidad (Online)'}
                 {activeTab === 'advent' && 'Calendario de Adviento'}
               </h2>
               <button onClick={() => setActiveTab('none')} className="hover:text-yellow-300 transition-colors">
@@ -244,14 +283,28 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
                         onChange={(e) => setNewWish(e.target.value)}
                         placeholder="Ej: Terminar Arquitectura, pala de padel..."
                         className="flex-1 p-2 border border-gray-300 rounded focus:border-red-500 outline-none"
+                        disabled={isSaving}
                       />
-                      <button onClick={addWish} className="bg-red-600 text-white px-4 rounded hover:bg-red-700">
-                        Añadir
+                      <button 
+                        onClick={addWish} 
+                        disabled={isSaving}
+                        className="bg-red-600 text-white px-4 rounded hover:bg-red-700 disabled:bg-gray-400"
+                      >
+                        {isSaving ? '...' : 'Añadir'}
                       </button>
                     </div>
                     <ul className="list-disc pl-5 text-sm text-gray-700">
                       {myWishes.map(wish => (
-                        <li key={wish.id}>{wish.item}</li>
+                        <li key={wish.id} className="flex justify-between items-center group">
+                          <span>{wish.item}</span>
+                          <button 
+                            onClick={() => deleteWish(wish.id)}
+                            className="text-red-400 hover:text-red-600 ml-2 opacity-50 group-hover:opacity-100"
+                            title="Borrar"
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                        </li>
                       ))}
                       {myWishes.length === 0 && <li className="text-gray-400 italic">No has añadido deseos aún.</li>}
                     </ul>
@@ -281,9 +334,14 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
                         onChange={(e) => setNewSuggestion(e.target.value)}
                         placeholder="Ej: Empanada de pollo y setas por fa"
                         className="flex-1 p-2 border border-gray-300 rounded focus:border-orange-500 outline-none"
+                        disabled={isSaving}
                       />
-                      <button onClick={addSuggestion} className="bg-orange-600 text-white px-4 rounded hover:bg-orange-700">
-                        Sugerir
+                      <button 
+                        onClick={addSuggestion} 
+                        disabled={isSaving}
+                        className="bg-orange-600 text-white px-4 rounded hover:bg-orange-700 disabled:bg-gray-400"
+                      >
+                        {isSaving ? '...' : 'Sugerir'}
                       </button>
                     </div>
                   </div>
