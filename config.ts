@@ -7,16 +7,17 @@
 // ==============================================================================
 
 export const secretSantaAssignments: Record<string, string> = {
-  "g.izdeca@gmail.com": "Miriam",
-  "sara.cervifon@gmail.com": "Nacho",
-  "m.mtena05@gmail.com": "Izquierdo",
-  "annabanro@gmail.com": "Josete",
-  "paloma.serranohe@gmail.com": "Sara",
-  "santibueno1903@gmail.com": "López",
-  "josean2408@hotmail.com": "Noelia",
-  "myriamra02@gmail.com": "Anita",
-  "miriamsierreamartinez@gmail.com": "Santi",
-  "nachojaac@gmail.com": "Paloma",
-  "guillermo.lopd@gmail.com": "Marta",
-  "malapersiana2018@gmail.com": "Myri",
+"g.izdeca@gmail.com": "Marta",
+"sara.cervifon@gmail.com": "Paloma",
+"m.mtena05@gmail.com": "Anita",
+"annabanro@gmail.com": "Noelia",
+"paloma.serranohe@gmail.com": "Miriam",
+"santibueno1903@gmail.com": "Sara",
+"josean2408@hotmail.com": "Izquierdo",
+"myriamra02@gmail.com": "López",
+"miriamsierreamartinez@gmail.com": "Myri",
+"nachojaac@gmail.com": "Josete",
+"guillermo.lopd@gmail.com": "Santi",
+"malapersiana2018@gmail.com": "Nacho",
+
 };
