@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Participant, GiftIdea, DinnerSuggestion } from '../types';
 import Countdown from './Countdown';
 import { getEventDate } from '../utils/timeUtils';
+import { secretSantaAssignments } from '../config';
 
 interface DashboardProps {
   userEmail: string;
@@ -47,55 +48,15 @@ const adventImages: Record<number, string> = {
   22: "https://images.unsplash.com/photo-1544211326-d626359eb368?auto=format&fit=crop&w=800&q=80",
 };
 
-// ==============================================================================
-// 🎁 CONFIGURACIÓN DEL SORTEO (AMIGO INVISIBLE) 🎁
-// ==============================================================================
-// AQUÍ DEFINES QUIÉN LE TOCA A QUIÉN.
-// Escribe el correo (en minúsculas) y el nombre de la persona que le tiene que salir.
-// Si un correo no está en esta lista, el sistema elegirá un nombre al azar.
-// ==============================================================================
-
-const secretSantaAssignments: Record<string, string> = {
-  // "correo_participante@gmail.com": "NOMBRE DE QUIEN LE TOCA REGALAR",
-  
-  "g.izdeca@gmail.com": "Miriam",
-"sara.cervifon@gmail.com": "Nacho",
-"m.mtena05@gmail.com": "Izquierdo",
-"annabanro@gmail.com": "Josete",
-"paloma.serranohe@gmail.com": "Sara",
-"santibueno1903@gmail.com": "López",
-"josean2408@hotmail.com": "Noelia",
-"myriamra02@gmail.com": "Anita",
-"miriamsierreamartinez@gmail.com": "Santi",
-"nachojaac@gmail.com": "Paloma",
-"guillermo.lopd@gmail.com": "Marta",
-"malapersiana2018@gmail.com": "Myri",
-
-  
-  // ¡AÑADE AQUÍ TUS PAREJAS! 👇
-  // "juan@gmail.com": "Lucía",
-  // "lucia@gmail.com": "Pedro",
-  
-};
-
 
 const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
   // Logic to determine Target Name
-  // 1. Check if email is in the manual configuration list
+  // 1. Check if email is in the manual configuration list (imported from config.ts)
   const normalizedEmail = userEmail.toLowerCase().trim();
-  let targetName = secretSantaAssignments[normalizedEmail];
-
-  // 2. Fallback: If email not found in config, generate a deterministic random name
-  if (!targetName) {
-    const possibleTargets = [
-      "María", "Juan", "Lucía", "Carlos", "Sofía", "Diego", 
-      "Elena", "Pablo", "Carmen", "Javier", "Ana", "Miguel",
-      "Laura", "Samu", "Paula", "Alejandro", "Marta", "David"
-    ];
-    // Hash email to pick a consistent index
-    const targetIndex = normalizedEmail.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % possibleTargets.length;
-    targetName = possibleTargets[targetIndex];
-  }
+  
+  // Como ya hemos validado en App.tsx, esto debería existir siempre.
+  // Si algo falla, ponemos un mensaje genérico, pero YA NO inventamos nombres.
+  let targetName = secretSantaAssignments[normalizedEmail] || "Error: Participante no encontrado";
 
   const [activeTab, setActiveTab] = useState<'none' | 'rules' | 'wishes' | 'dinner' | 'advent'>('none');
   const [wishes, setWishes] = useState<GiftIdea[]>([]);

@@ -3,11 +3,13 @@ import React, { useState } from 'react';
 import Snowflakes from './components/Snowflakes';
 import Dashboard from './components/Dashboard';
 import { AppStage } from './types';
+import { secretSantaAssignments } from './config';
 
 const App: React.FC = () => {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [stage, setStage] = useState<AppStage>(AppStage.WELCOME);
+  const [errorMsg, setErrorMsg] = useState('');
   
   // Logic to handle entering the app (checking local storage or starting fresh)
   const handleEnterApp = () => {
@@ -29,9 +31,18 @@ const App: React.FC = () => {
 
   const handleRegisterEmail = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && email.includes('@')) {
-      localStorage.setItem('ns_user_email', email);
+    setErrorMsg('');
+    
+    const normalizedEmail = email.toLowerCase().trim();
+    
+    // VALIDACIÓN ESTRICTA: Solo permite correos que estén en la lista de configuración
+    if (secretSantaAssignments[normalizedEmail]) {
+      localStorage.setItem('ns_user_email', normalizedEmail);
+      setEmail(normalizedEmail); // Update state with normalized email
       setStage(AppStage.NAME_INPUT);
+    } else {
+      setErrorMsg('Este correo no está en la lista de participantes. Revisa que esté bien escrito.');
+      // Opcional: Limpiar el campo o dejarlo para que lo corrijan
     }
   };
 
@@ -86,14 +97,24 @@ const App: React.FC = () => {
               Bienvenido al sorteo. Espaputobila, introduce tu correo para unirte al cachondeo mágico de regalos.
             </p>
             <form onSubmit={handleRegisterEmail} className="flex flex-col gap-4">
-              <input 
-                type="email" 
-                required
-                placeholder="PalomaMolaMogoñon@gmail" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="p-4 rounded-xl text-gray-900 placeholder:text-gray-400 outline-none focus:ring-4 focus:ring-yellow-400 transition-all text-lg shadow-inner"
-              />
+              <div>
+                <input 
+                  type="email" 
+                  required
+                  placeholder="PalomaMolaMogoñon@gmail" 
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setErrorMsg(''); // Clear error on typing
+                  }}
+                  className={`w-full p-4 rounded-xl text-gray-900 placeholder:text-gray-400 outline-none focus:ring-4 transition-all text-lg shadow-inner ${errorMsg ? 'border-2 border-red-500 focus:ring-red-400' : 'focus:ring-yellow-400'}`}
+                />
+                {errorMsg && (
+                  <p className="text-red-300 text-sm mt-2 font-bold bg-red-900/50 p-2 rounded">
+                    ⚠️ {errorMsg}
+                  </p>
+                )}
+              </div>
               <button 
                 type="submit" 
                 className="bg-green-700 hover:bg-green-600 text-white font-bold py-4 rounded-xl shadow-lg transform active:scale-95 transition-all text-xl uppercase tracking-wider border-b-4 border-green-900"
