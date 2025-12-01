@@ -47,7 +47,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-red-900 via-red-800 to-green-900 text-white overflow-hidden relative selection:bg-yellow-300 selection:text-red-900">
       <Snowflakes />
       
-      <main className="relative z-10 container mx-auto px-4 min-h-screen flex flex-col items-center justify-center py-10">
+      <main className="relative z-10 container mx-auto px-4 min-h-screen flex flex-col items-center justify-center py-10 pb-16">
         
         {/* Header Logo/Title - Only show small header on Dashboard to save space */}
         {stage !== AppStage.WELCOME && (
@@ -61,7 +61,7 @@ const App: React.FC = () => {
 
         {/* STAGE 0: WELCOME SCREEN */}
         {stage === AppStage.WELCOME && (
-          <div className="text-center animate-fade-in flex flex-col items-center justify-center h-full">
+          <div className="text-center animate-fade-in flex flex-col items-center justify-center h-full relative">
              <div className="text-8xl mb-6 animate-bounce drop-shadow-[0_0_25px_rgba(255,215,0,0.6)]">🎄</div>
              <h1 className="text-6xl md:text-8xl festive-font text-white mb-8 drop-shadow-xl leading-tight">
                Feliz<br/> <span className="text-yellow-400">Navidad</span>
@@ -83,13 +83,13 @@ const App: React.FC = () => {
         {stage === AppStage.REGISTRATION && (
           <div className="w-full max-w-md bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20 shadow-2xl animate-fade-in-up">
             <p className="text-center text-lg mb-6 text-gray-100 leading-relaxed">
-              Bienvenido al sorteo. Espabila, introduce tu correo para unirte al cachondeo mágico de regalos.
+              Bienvenido al sorteo. Espaputobila, introduce tu correo para unirte al cachondeo mágico de regalos.
             </p>
             <form onSubmit={handleRegisterEmail} className="flex flex-col gap-4">
               <input 
                 type="email" 
                 required
-                placeholder="tu@email.com" 
+                placeholder="PalomaMolaMogoñon@gmail" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="p-4 rounded-xl text-gray-900 placeholder:text-gray-400 outline-none focus:ring-4 focus:ring-yellow-400 transition-all text-lg shadow-inner"
@@ -111,7 +111,7 @@ const App: React.FC = () => {
             <div className="bg-[#fcfaf2] text-gray-800 p-8 md:p-12 rounded-sm shadow-[0_0_50px_rgba(0,0,0,0.5)] rotate-1 transform relative overflow-hidden">
               {/* Decorative Stamp */}
               <div className="absolute top-4 right-4 w-16 h-20 border-4 border-red-800 opacity-80 flex items-center justify-center rotate-6">
-                <span className="text-red-800 text-xs font-bold text-center uppercase leading-tight">Correo<br/>Mágico<br/>Norte</span>
+                <span className="text-red-800 text-xs font-bold text-center uppercase leading-tight">Moraleja<br/>Del<br/>Medio</span>
               </div>
 
               <form onSubmit={handleRegisterName} className="flex flex-col gap-6 relative z-10">
@@ -161,6 +161,13 @@ const App: React.FC = () => {
 
       {/* Footer Decoration */}
       <div className="fixed bottom-0 left-0 w-full h-16 bg-[url('https://raw.githubusercontent.com/gist/stevenlei/2108527/raw/26e06b99676579c094709405606d09c2536c342d/snow-ground.png')] bg-repeat-x bg-contain opacity-50 pointer-events-none z-0"></div>
+      
+      {/* Work in Progress Footer Message */}
+      <div className="fixed bottom-1 w-full text-center z-50 pointer-events-none">
+        <p className="text-[10px] text-white/40 font-mono tracking-wide">
+          ⚠️ El duende Juandi está trabajando en mejorar la web. Gracias por su paciencia. 🔨
+        </p>
+      </div>
     </div>
   );
 };

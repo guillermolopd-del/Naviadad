@@ -1,3 +1,4 @@
+
 export const getTodayMidnight = (): Date => {
   const now = new Date();
   const midnight = new Date(now);
