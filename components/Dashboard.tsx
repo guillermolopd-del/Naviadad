@@ -264,7 +264,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
               {activeTab === 'wishes' && (
                 <div className="space-y-6">
                   <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
-                    <h3 className="font-bold text-yellow-800 mb-2">🎁 Mis Deseos (ya no vale poner el Silksong.)
+                    <h3 className="font-bold text-yellow-800 mb-2">🎁 Mis Deseos (ya no vale poner el Silksong.)</h3>
                     <div className="flex gap-2 mb-3">
                       <input 
                         type="text" 
