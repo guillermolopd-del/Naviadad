@@ -1,5 +1,4 @@
-
-import { initializeApp } from "firebase/app";
+import * as firebaseApp from "firebase/app";
 import { getDatabase } from "firebase/database";
 
 // ============================================================================
@@ -19,5 +18,6 @@ const firebaseConfig = {
 };
 
 // Inicializar Firebase
-const app = initializeApp(firebaseConfig);
+// Use type assertion to bypass potential "no exported member" TS error depending on environment
+const app = (firebaseApp as any).initializeApp(firebaseConfig);
 export const db = getDatabase(app);

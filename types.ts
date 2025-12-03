@@ -1,4 +1,5 @@
 
+
 export interface GiftIdea {
   id: string;
   item: string;
@@ -16,6 +17,13 @@ export interface Participant {
   email: string;
   targetEmail: string; // The person they have to gift
   targetName: string; // Simulated name for the demo
+}
+
+export interface HighScore {
+  id: string;
+  name: string;
+  score: number;
+  timestamp: number;
 }
 
 export enum AppStage {

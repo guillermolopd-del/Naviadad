@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { GiftIdea, DinnerSuggestion } from '../types';
+import { GiftIdea, DinnerSuggestion, HighScore } from '../types';
 import Countdown from './Countdown';
 import { getEventDate } from '../utils/timeUtils';
 import { secretSantaAssignments } from '../config';
 import { db } from '../firebaseConfig';
 import { ref, onValue, push, remove } from 'firebase/database';
+import PadelGame from './PadelGame';
 
 interface DashboardProps {
   userEmail: string;
@@ -20,9 +21,9 @@ const adventImages: Record<number, string> = {
   2:  "https://i.imgur.com/XCTsxvE.jpeg", 
   3:  "https://i.imgur.com/oasB3TS.jpeg",
   4:  "https://i.imgur.com/zvpV0Fm.jpeg",
-  5:  "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=800&q=80",
-  6:  "https://images.unsplash.com/photo-1513297887119-d46091b24bfa?auto=format&fit=crop&w=800&q=80",
-  7:  "https://images.unsplash.com/photo-1527631120902-378417754324?auto=format&fit=crop&w=800&q=80",
+  5:  "https://i.imgur.com/VjEaBQs.jpeg",
+  6:  "https://i.imgur.com/8HupUGX.jpeg",
+  7:  "https://i.imgur.com/aAdv1q2.jpeg",
   
   // --- SEMANA 2 ---
   8:  "https://images.unsplash.com/photo-1575317781701-d7790b9b3294?auto=format&fit=crop&w=800&q=80",
@@ -51,12 +52,14 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
   // Logic to determine Target Name
   const normalizedEmail = userEmail.toLowerCase().trim();
   let targetName = secretSantaAssignments[normalizedEmail] || "Error: Participante no encontrado";
+  const userName = localStorage.getItem('ns_user_name') || userEmail.split('@')[0];
 
-  const [activeTab, setActiveTab] = useState<'none' | 'rules' | 'wishes' | 'dinner' | 'advent'>('none');
+  const [activeTab, setActiveTab] = useState<'none' | 'rules' | 'wishes' | 'dinner' | 'advent' | 'minigames'>('none');
   const [wishes, setWishes] = useState<GiftIdea[]>([]);
   const [newWish, setNewWish] = useState('');
   const [suggestions, setSuggestions] = useState<DinnerSuggestion[]>([]);
   const [newSuggestion, setNewSuggestion] = useState('');
+  const [highScores, setHighScores] = useState<HighScore[]>([]);
   const [isRevealed, setIsRevealed] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
@@ -104,6 +107,26 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
     };
   }, []);
 
+  // Cargar Leaderboard solo cuando se abre la pestaña
+  useEffect(() => {
+    if (activeTab === 'minigames') {
+        const scoresRef = ref(db, 'leaderboard_padel');
+        const unsubscribeScores = onValue(scoresRef, (snapshot) => {
+            const data = snapshot.val();
+            const scoresList: HighScore[] = [];
+            if (data) {
+                Object.keys(data).forEach(key => {
+                    scoresList.push({ ...data[key], id: key });
+                });
+            }
+            // Ordenar en memoria (cliente) para evitar "Index not defined" en Firebase
+            scoresList.sort((a, b) => b.score - a.score); // Descendente (mayor a menor)
+            setHighScores(scoresList.slice(0, 20)); // Top 20
+        });
+        return () => unsubscribeScores();
+    }
+  }, [activeTab]);
+
   const addWish = () => {
     if (!newWish.trim()) return;
     setIsSaving(true);
@@ -139,7 +162,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
     const suggestionsRef = ref(db, 'dinner_suggestions');
     const newSuggestionObj = {
       dish: newSuggestion,
-      author: localStorage.getItem('ns_user_name') || userEmail.split('@')[0],
+      author: userName,
       timestamp: Date.now()
     };
     push(suggestionsRef, newSuggestionObj)
@@ -208,49 +231,61 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
       />
 
       {/* Action Buttons Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 w-full mb-8">
         <button 
           onClick={() => setActiveTab('rules')}
-          className="bg-green-800 hover:bg-green-700 text-white p-4 md:p-6 rounded-xl shadow-lg border-b-4 border-green-900 transition-all flex flex-col items-center gap-2 group"
+          className="bg-green-800 hover:bg-green-700 text-white p-4 rounded-xl shadow-lg border-b-4 border-green-900 transition-all flex flex-col items-center gap-2 group"
         >
           <i className="fas fa-scroll text-2xl md:text-3xl group-hover:rotate-12 transition-transform"></i>
-          <span className="font-bold text-sm md:text-lg">Reglas</span>
+          <span className="font-bold text-xs md:text-sm">Reglas</span>
         </button>
         <button 
           onClick={() => setActiveTab('wishes')}
-          className="bg-red-700 hover:bg-red-600 text-white p-4 md:p-6 rounded-xl shadow-lg border-b-4 border-red-900 transition-all flex flex-col items-center gap-2 group"
+          className="bg-red-700 hover:bg-red-600 text-white p-4 rounded-xl shadow-lg border-b-4 border-red-900 transition-all flex flex-col items-center gap-2 group"
         >
           <i className="fas fa-gift text-2xl md:text-3xl group-hover:-translate-y-1 transition-transform"></i>
-          <span className="font-bold text-sm md:text-lg">Ideas</span>
+          <span className="font-bold text-xs md:text-sm">Ideas</span>
         </button>
         <button 
           onClick={() => setActiveTab('dinner')}
-          className="bg-yellow-600 hover:bg-yellow-500 text-white p-4 md:p-6 rounded-xl shadow-lg border-b-4 border-yellow-800 transition-all flex flex-col items-center gap-2 group"
+          className="bg-yellow-600 hover:bg-yellow-500 text-white p-4 rounded-xl shadow-lg border-b-4 border-yellow-800 transition-all flex flex-col items-center gap-2 group"
         >
           <i className="fas fa-utensils text-2xl md:text-3xl group-hover:scale-110 transition-transform"></i>
-          <span className="font-bold text-sm md:text-lg">Cena</span>
+          <span className="font-bold text-xs md:text-sm">Cena</span>
         </button>
         <button 
           onClick={() => setActiveTab('advent')}
-          className="bg-blue-600 hover:bg-blue-500 text-white p-4 md:p-6 rounded-xl shadow-lg border-b-4 border-blue-800 transition-all flex flex-col items-center gap-2 group"
+          className="bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-xl shadow-lg border-b-4 border-blue-800 transition-all flex flex-col items-center gap-2 group"
         >
           <i className="far fa-calendar-alt text-2xl md:text-3xl group-hover:animate-pulse transition-transform"></i>
-          <span className="font-bold text-sm md:text-lg">Adviento</span>
+          <span className="font-bold text-xs md:text-sm">Adviento</span>
+        </button>
+        <button 
+          onClick={() => setActiveTab('minigames')}
+          className="bg-purple-600 hover:bg-purple-500 text-white p-4 rounded-xl shadow-lg border-b-4 border-purple-800 transition-all flex flex-col items-center gap-2 group"
+        >
+          <i className="fas fa-gamepad text-2xl md:text-3xl group-hover:rotate-6 transition-transform"></i>
+          <span className="font-bold text-xs md:text-sm">Juegos</span>
         </button>
       </div>
 
       {/* Modals / Content Sections */}
       {activeTab !== 'none' && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-slate-50 text-gray-800 w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+          <div className="bg-slate-50 text-gray-800 w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh]">
             
             {/* Modal Header */}
-            <div className={`p-4 flex justify-between items-center text-white ${activeTab === 'advent' ? 'bg-blue-700' : 'bg-red-700'}`}>
-              <h2 className="text-2xl festive-font font-bold">
+            <div className={`p-4 flex justify-between items-center text-white ${
+                activeTab === 'advent' ? 'bg-blue-700' : 
+                activeTab === 'minigames' ? 'bg-purple-700' :
+                'bg-red-700'
+            }`}>
+              <h2 className="text-xl md:text-2xl festive-font font-bold">
                 {activeTab === 'rules' && 'Reglas del Juego'}
                 {activeTab === 'wishes' && 'Lista de Deseos (Online)'}
                 {activeTab === 'dinner' && 'Menú de Navidad (Online)'}
                 {activeTab === 'advent' && 'Calendario de Adviento'}
+                {activeTab === 'minigames' && 'Arcade Navideño'}
               </h2>
               <button onClick={() => setActiveTab('none')} className="hover:text-yellow-300 transition-colors">
                 <i className="fas fa-times text-2xl"></i>
@@ -258,7 +293,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
             </div>
 
             {/* Modal Content */}
-            <div className="p-6 overflow-y-auto custom-scrollbar">
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
               
               {/* RULES SECTION */}
               {activeTab === 'rules' && (
@@ -381,6 +416,50 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
                       );
                     })}
                   </div>
+                </div>
+              )}
+
+              {/* MINIGAMES SECTION */}
+              {activeTab === 'minigames' && (
+                <div className="flex flex-col lg:flex-row gap-6">
+                    {/* Game Column */}
+                    <div className="flex-1">
+                         <div className="bg-green-100 p-4 rounded-xl border border-green-300 mb-4">
+                            <h3 className="font-bold text-green-800 text-lg mb-2">🎾 Pádel vs Noelia </h3>
+                            <p className="text-sm text-gray-600 mb-4">
+                                Cuenta la leyenda que Noelia nunca ha perdido un partido de pádel. Cada vez que le marcas un punto, sumas +1. Si ella te marca a ti, pierdes.
+                            </p>
+                            <PadelGame playerName={userName} />
+                         </div>
+                    </div>
+
+                    {/* Leaderboard Column */}
+                    <div className="lg:w-1/3 bg-purple-50 p-4 rounded-xl border border-purple-200 max-h-[60vh] overflow-y-auto">
+                         <h3 className="font-bold text-purple-900 text-lg mb-4 flex items-center gap-2">
+                            <i className="fas fa-trophy text-yellow-500"></i> Clasificación
+                         </h3>
+                         <div className="space-y-2">
+                            {highScores.map((entry, index) => (
+                                <div key={entry.id} className={`flex items-center justify-between p-2 rounded shadow-sm ${index === 0 ? 'bg-yellow-100 border border-yellow-300' : 'bg-white border border-gray-100'}`}>
+                                    <div className="flex items-center gap-3">
+                                        <span className={`font-bold w-6 text-center ${index === 0 ? 'text-2xl text-yellow-600' : 'text-gray-500'}`}>
+                                            {index === 0 ? '🥇' : index + 1}
+                                        </span>
+                                        <div>
+                                            <p className="font-bold text-gray-800 text-sm">{entry.name}</p>
+                                            <p className="text-[10px] text-gray-400">{new Date(entry.timestamp).toLocaleDateString()}</p>
+                                        </div>
+                                    </div>
+                                    <span className="font-mono font-bold text-purple-700 bg-purple-100 px-2 py-1 rounded">
+                                        {entry.score} pts
+                                    </span>
+                                </div>
+                            ))}
+                            {highScores.length === 0 && (
+                                <p className="text-center text-gray-400 text-sm py-4">Nadie ha jugado aún... ¡Sé el primero!</p>
+                            )}
+                         </div>
+                    </div>
                 </div>
               )}
 
