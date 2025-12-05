@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { db } from '../firebaseConfig';
 import { ref, push, get, update } from 'firebase/database';
@@ -18,7 +19,7 @@ const PadelGame: React.FC<PadelGameProps> = ({ playerName }) => {
   const BALL_SIZE = 8;
   const CANVAS_WIDTH = 600; 
   const CANVAS_HEIGHT = 400;
-  const INITIAL_SPEED = 4; // Reducido de 4 a 3 para que sea más lento al inicio
+  const INITIAL_SPEED = 3; // Reducido de 4 a 3 para que sea más lento al inicio
 
   // Game State Refs (mutable for loop)
   const stateRef = useRef({
@@ -154,7 +155,7 @@ const PadelGame: React.FC<PadelGameProps> = ({ playerName }) => {
             state.ballSpeedX = Math.abs(state.ballSpeedX) + 0.2; // Speed up slightly
             // Add slight angle variation based on where it hit the paddle
             const deltaY = state.ballY - (state.playerY + PADDLE_HEIGHT / 2);
-            state.ballSpeedY = deltaY * 0.4;
+            state.ballSpeedY = deltaY * 0.2;
           } else if (state.ballX < 0) {
             // GAME OVER - Ball passed player
             setScore(state.score);
