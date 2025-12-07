@@ -12,6 +12,7 @@ const PadelGame: React.FC<PadelGameProps> = ({ playerName }) => {
   const [gameState, setGameState] = useState<'menu' | 'playing' | 'gameover'>('menu');
   const [score, setScore] = useState(0);
   const [highScoreSubmitted, setHighScoreSubmitted] = useState(false);
+  const lastTimeRef = useRef<number>(0);
 
   // Game Constants
   const PADDLE_HEIGHT = 80;
@@ -19,7 +20,8 @@ const PadelGame: React.FC<PadelGameProps> = ({ playerName }) => {
   const BALL_SIZE = 8;
   const CANVAS_WIDTH = 600; 
   const CANVAS_HEIGHT = 400;
-  const INITIAL_SPEED = 3; // Reducido de 4 a 3 para que sea más lento al inicio
+  const INITIAL_SPEED = 4; // Velocidad base
+  const TARGET_FPS = 60;
 
   // Game State Refs (mutable for loop)
   const stateRef = useRef({
@@ -131,18 +133,29 @@ const PadelGame: React.FC<PadelGameProps> = ({ playerName }) => {
   useEffect(() => {
     let animationFrameId: number;
 
-    const loop = () => {
+    const loop = (timestamp: number) => {
+      if (!lastTimeRef.current) lastTimeRef.current = timestamp;
+      const deltaTime = timestamp - lastTimeRef.current;
+      lastTimeRef.current = timestamp;
+
+      // Calcular factor de ajuste de velocidad (si va lento, mueve más pixeles)
+      // Base es 60fps (aprox 16.6ms por frame)
+      const timeScale = deltaTime / (1000 / TARGET_FPS);
+
       const canvas = canvasRef.current;
       const ctx = canvas?.getContext('2d');
       const state = stateRef.current;
 
-      if (!canvas || !ctx) return;
+      if (!canvas || !ctx) {
+          animationFrameId = requestAnimationFrame(loop);
+          return;
+      }
 
       // 1. UPDATE LOGIC
       if (state.isPlaying) {
-        // Move Ball
-        state.ballX += state.ballSpeedX;
-        state.ballY += state.ballSpeedY;
+        // Move Ball (Scaled by Delta Time)
+        state.ballX += state.ballSpeedX * timeScale;
+        state.ballY += state.ballSpeedY * timeScale;
 
         // Wall Collisions (Top/Bottom)
         if (state.ballY < 0 || state.ballY > CANVAS_HEIGHT) {
@@ -152,7 +165,11 @@ const PadelGame: React.FC<PadelGameProps> = ({ playerName }) => {
         // Paddle Collision (Player - Left)
         if (state.ballX < PADDLE_WIDTH + 5) {
           if (state.ballY > state.playerY && state.ballY < state.playerY + PADDLE_HEIGHT) {
-            state.ballSpeedX = Math.abs(state.ballSpeedX) + 0.2; // Speed up slightly
+            // Speed up slightly
+            const currentSpeed = Math.abs(state.ballSpeedX);
+            const newSpeed = currentSpeed + 0.2;
+            state.ballSpeedX = newSpeed; 
+            
             // Add slight angle variation based on where it hit the paddle
             const deltaY = state.ballY - (state.playerY + PADDLE_HEIGHT / 2);
             state.ballSpeedY = deltaY * 0.2;
@@ -181,13 +198,24 @@ const PadelGame: React.FC<PadelGameProps> = ({ playerName }) => {
           }
         }
 
-        // AI Logic (Noelia)
+        // AI Logic (Noelia) - Scaled by Delta Time
         const centerPaddle = state.computerY + PADDLE_HEIGHT / 2;
+        
+        // MODIFICACIÓN DE DIFICULTAD:
+        // 1. Velocidad base reducida de 3.5 a 2.5 (Más lenta que la bola inicial)
+        // 2. Progresión reducida de 0.1 a 0.05 por nivel
+        const aiSpeed = (2.5 + (state.score * 0.05)) * timeScale; 
+
+        // Solo se mueve si la pelota va hacia ella
         if (state.ballSpeedX > 0) {
-            if (centerPaddle < state.ballY - 10) {
-                state.computerY += 3.0 + (state.score * 0.05); // Slightly easier initially
-            } else if (centerPaddle > state.ballY + 10) {
-                state.computerY -= 3.0 + (state.score * 0.05);
+            // 3. RETRASO EN REACCIÓN: Solo empieza a moverse si la pelota ha pasado x=50
+            if (state.ballX > 50) {
+                // 4. MARGEN DE ERROR: Aumentado de 10 a 25. Es menos precisa y "vaga"
+                if (centerPaddle < state.ballY - 25) {
+                    state.computerY += aiSpeed;
+                } else if (centerPaddle > state.ballY + 25) {
+                    state.computerY -= aiSpeed;
+                }
             }
         }
       }
@@ -242,7 +270,7 @@ const PadelGame: React.FC<PadelGameProps> = ({ playerName }) => {
       animationFrameId = requestAnimationFrame(loop);
     };
 
-    loop();
+    animationFrameId = requestAnimationFrame(loop);
 
     return () => cancelAnimationFrame(animationFrameId);
   }, []);
@@ -258,6 +286,7 @@ const PadelGame: React.FC<PadelGameProps> = ({ playerName }) => {
       score: 0,
       isPlaying: true
     };
+    lastTimeRef.current = 0;
     setScore(0);
     setHighScoreSubmitted(false);
     setGameState('playing');
