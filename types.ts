@@ -1,10 +1,9 @@
-
-
 export interface GiftIdea {
   id: string;
   item: string;
   description?: string;
   forEmail: string; // The person who WANTS this gift
+  authorName?: string; // The person who wrote the wish
 }
 
 export interface DinnerSuggestion {

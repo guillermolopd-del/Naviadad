@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { GiftIdea, DinnerSuggestion, HighScore } from '../types';
 import Countdown from './Countdown';
@@ -27,11 +26,11 @@ const adventImages: Record<number, string> = {
   
   // --- SEMANA 2 ---
   8:  "https://i.imgur.com/QKrSErS.jpeg",
-  9:  "https://images.unsplash.com/photo-1479722842840-c0a821bd254e?auto=format&fit=crop&w=800&q=80",
-  10: "https://images.unsplash.com/photo-1545048702-79362596cdc9?auto=format&fit=crop&w=800&q=80",
-  11: "https://images.unsplash.com/photo-1481391032119-d89fee407e44?auto=format&fit=crop&w=800&q=80",
-  12: "https://images.unsplash.com/photo-1543094961-d7b326466bb4?auto=format&fit=crop&w=800&q=80",
-  13: "https://images.unsplash.com/photo-1512474932049-78ea707b5525?auto=format&fit=crop&w=800&q=80",
+  9:  "https://i.imgur.com/MMyeIGC.jpeg",
+  10: "https://i.imgur.com/FGCIfnD.jpeg",
+  11: "https://i.imgur.com/tTLnaWp.jpeg",
+  12: "https://i.imgur.com/v4T0ula.jpeg",
+  13: "https://i.imgur.com/vW1Egdz.jpeg",
   14: "https://images.unsplash.com/photo-1511525380295-c1fc35db0041?auto=format&fit=crop&w=800&q=80",
   
   // --- SEMANA 3 ---
@@ -59,7 +58,10 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
   const [newWish, setNewWish] = useState('');
   const [suggestions, setSuggestions] = useState<DinnerSuggestion[]>([]);
   const [newSuggestion, setNewSuggestion] = useState('');
-  const [highScores, setHighScores] = useState<HighScore[]>([]);
+  
+  // Game States
+  const [padelHighScores, setPadelHighScores] = useState<HighScore[]>([]);
+
   const [isRevealed, setIsRevealed] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
@@ -107,23 +109,24 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
     };
   }, []);
 
-  // Cargar Leaderboard solo cuando se abre la pestaña
+  // Cargar Leaderboards solo cuando se abre la pestaña de minijuegos
   useEffect(() => {
     if (activeTab === 'minigames') {
-        const scoresRef = ref(db, 'leaderboard_padel');
-        const unsubscribeScores = onValue(scoresRef, (snapshot) => {
+        // PADEL
+        const padelRef = ref(db, 'leaderboard_padel');
+        const unsubPadel = onValue(padelRef, (snapshot) => {
             const data = snapshot.val();
             const scoresList: HighScore[] = [];
             if (data) {
-                Object.keys(data).forEach(key => {
-                    scoresList.push({ ...data[key], id: key });
-                });
+                Object.keys(data).forEach(key => scoresList.push({ ...data[key], id: key }));
             }
-            // Ordenar en memoria (cliente) para evitar "Index not defined" en Firebase
-            scoresList.sort((a, b) => b.score - a.score); // Descendente (mayor a menor)
-            setHighScores(scoresList.slice(0, 20)); // Top 20
+            scoresList.sort((a, b) => b.score - a.score);
+            setPadelHighScores(scoresList.slice(0, 20));
         });
-        return () => unsubscribeScores();
+
+        return () => {
+            unsubPadel();
+        };
     }
   }, [activeTab]);
 
@@ -134,6 +137,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
     const newWishObj = {
       item: newWish,
       forEmail: userEmail,
+      authorName: userName, // NEW: Save author name
       timestamp: Date.now()
     };
     push(wishesRef, newWishObj)
@@ -265,7 +269,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
           className="bg-purple-600 hover:bg-purple-500 text-white p-4 rounded-xl shadow-lg border-b-4 border-purple-800 transition-all flex flex-col items-center gap-2 group"
         >
           <i className="fas fa-gamepad text-2xl md:text-3xl group-hover:rotate-6 transition-transform"></i>
-          <span className="font-bold text-xs md:text-sm">Juegos</span>
+          <span className="font-bold text-xs md:text-sm">Pádel</span>
         </button>
       </div>
 
@@ -285,7 +289,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
                 {activeTab === 'wishes' && 'Lista de Deseos (Online)'}
                 {activeTab === 'dinner' && 'Menú de Navidad (Online)'}
                 {activeTab === 'advent' && 'Calendario de Adviento'}
-                {activeTab === 'minigames' && 'Arcade Navideño'}
+                {activeTab === 'minigames' && 'Pádel vs Noelia'}
               </h2>
               <button onClick={() => setActiveTab('none')} className="hover:text-yellow-300 transition-colors">
                 <i className="fas fa-times text-2xl"></i>
@@ -349,7 +353,9 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
                     <h3 className="font-bold text-green-800 mb-2">🕵️ Myri Resumen de regalos (Lo que otros quieren)</h3>
                     <ul className="list-disc pl-5 text-gray-700">
                       {visibleWishes.map(wish => (
-                        <li key={wish.id}><span className="font-semibold">Alguien quiere:</span> {wish.item}</li>
+                        <li key={wish.id}>
+                          <span className="font-semibold">{wish.authorName || 'Alguien'} quiere:</span> {wish.item}
+                        </li>
                       ))}
                       {visibleWishes.length === 0 && <li className="text-gray-400 italic">Nadie ha puesto deseos todavía.</li>}
                     </ul>
@@ -424,23 +430,26 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
                 <div className="flex flex-col lg:flex-row gap-6">
                     {/* Game Column */}
                     <div className="flex-1">
-                         <div className="bg-green-100 p-4 rounded-xl border border-green-300 mb-4">
-                            <h3 className="font-bold text-green-800 text-lg mb-2">🎾 Pádel vs Noelia </h3>
+                         {/* PADEL GAME */}
+                         <div className="bg-green-100 p-4 rounded-xl border border-green-300 mb-4 animate-fade-in">
+                            <h3 className="font-bold text-green-800 text-lg mb-2">Pádel vs Noelia</h3>
                             <p className="text-sm text-gray-600 mb-4">
-                                Cuenta la leyenda que Noelia nunca ha perdido un partido de pádel. Cada vez que le marcas un punto, sumas +1. Si ella te marca a ti, pierdes.
+                                Cuenta la leyenda que Noelia nunca ha perdido un partido. +1 punto por gol, si te marcan, pierdes.
                             </p>
                             <PadelGame playerName={userName} />
                          </div>
                     </div>
 
                     {/* Leaderboard Column */}
-                    <div className="lg:w-1/3 bg-purple-50 p-4 rounded-xl border border-purple-200 max-h-[60vh] overflow-y-auto">
-                         <h3 className="font-bold text-purple-900 text-lg mb-4 flex items-center gap-2">
-                            <i className="fas fa-trophy text-yellow-500"></i> Clasificación
+                    <div className="lg:w-1/3 bg-white p-4 rounded-xl border border-gray-200 max-h-[60vh] overflow-y-auto shadow-inner">
+                         <h3 className="font-bold text-gray-800 text-lg mb-4 flex items-center gap-2 sticky top-0 bg-white py-2 border-b">
+                            <i className="fas fa-trophy text-yellow-500"></i> Clasificación ATP
                          </h3>
+                         
+                         {/* PADEL LEADERBOARD */}
                          <div className="space-y-2">
-                            {highScores.map((entry, index) => (
-                                <div key={entry.id} className={`flex items-center justify-between p-2 rounded shadow-sm ${index === 0 ? 'bg-yellow-100 border border-yellow-300' : 'bg-white border border-gray-100'}`}>
+                            {padelHighScores.map((entry, index) => (
+                                <div key={entry.id} className={`flex items-center justify-between p-2 rounded shadow-sm ${index === 0 ? 'bg-yellow-100 border border-yellow-300' : 'bg-gray-50 border border-gray-100'}`}>
                                     <div className="flex items-center gap-3">
                                         <span className={`font-bold w-6 text-center ${index === 0 ? 'text-2xl text-yellow-600' : 'text-gray-500'}`}>
                                             {index === 0 ? '🥇' : index + 1}
@@ -450,14 +459,12 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
                                             <p className="text-[10px] text-gray-400">{new Date(entry.timestamp).toLocaleDateString()}</p>
                                         </div>
                                     </div>
-                                    <span className="font-mono font-bold text-purple-700 bg-purple-100 px-2 py-1 rounded">
+                                    <span className="font-mono font-bold text-green-700 bg-green-100 px-2 py-1 rounded text-xs">
                                         {entry.score} pts
                                     </span>
                                 </div>
                             ))}
-                            {highScores.length === 0 && (
-                                <p className="text-center text-gray-400 text-sm py-4">Nadie ha jugado aún... ¡Sé el primero!</p>
-                            )}
+                            {padelHighScores.length === 0 && <p className="text-center text-gray-400 text-sm">Sin registros.</p>}
                          </div>
                     </div>
                 </div>
