@@ -31,7 +31,7 @@ const adventImages: Record<number, string> = {
   11: "https://i.imgur.com/tTLnaWp.jpeg",
   12: "https://i.imgur.com/v4T0ula.jpeg",
   13: "https://i.imgur.com/vW1Egdz.jpeg",
-  14: "https://images.unsplash.com/photo-1511525380295-c1fc35db0041?auto=format&fit=crop&w=800&q=80",
+  14: "https://i.imgur.com/2JCFTma.jpeg",
   
   // --- SEMANA 3 ---
   15: "https://images.unsplash.com/photo-1577045167527-775677987244?auto=format&fit=crop&w=800&q=80",
@@ -305,7 +305,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail }) => {
                   <p>🎅 <span className="font-bold">Presupuesto:</span> 15€.</p>
                   <p>🤫 <span className="font-bold">Secreto:</span> Nadie puede revelar su identidad hasta el día 22, si como TayTay.</p>
                   <p>🎁 <span className="font-bold">Regalo:</span> El regalo puede ser todo lo creativo que quieras, o farlopa.</p>
-                  <p>📌 <span className="font-bold">Lugar:</span> Todavia por confirmar. Incluso por pensar.</p>
+                  <p>📌 <span className="font-bold">Lugar:</span> Casa de Noelia a las 19:00. Ser puntuales...</p>
                   <p>🍹 <span className="font-bold">Bebida:</span> Paloma y Marta deberan preparar mojitos, peticion de Santa.</p>
                 </div>
               )}
