@@ -37,7 +37,7 @@ const adventImages: Record<number, string> = {
   15: "https://i.imgur.com/uSSXQ4y.jpeg",
   16: "https://i.imgur.com/qc5qQ21.jpeg",
   17: "https://i.imgur.com/G43WvSw.jpeg",
-  18: "https://images.unsplash.com/photo-1576615278693-01d782729a8e?auto=format&fit=crop&w=800&q=80",
+  18: "https://i.imgur.com/CELve85.jpeg",
   19: "https://images.unsplash.com/photo-1529973625058-a665431328fb?auto=format&fit=crop&w=800&q=80",
   20: "https://images.unsplash.com/photo-1480632558668-a3294c7a7e8e?auto=format&fit=crop&w=800&q=80",
   21: "https://images.unsplash.com/photo-1575298539255-a5a40954b9d0?auto=format&fit=crop&w=800&q=80",
